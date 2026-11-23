@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PaySure</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:16px}
+textarea,select,button,input{width:100%;font-size:16px;margin:6px 0;padding:10px;box-sizing:border-box}
+#v{display:none;padding:18px;border-radius:12px;color:#fff;font-size:20px;margin-top:12px}
+.green{background:#1a7f37}.yellow{background:#b7791f}.red{background:#c0392b}
+img{max-width:100%;border-radius:8px;margin-top:8px}
+small{opacity:.85;display:block;margin-top:8px;font-size:14px}
+</style></head><body>
+<h2>PaySure</h2>
+<input type="password" id="k" placeholder="App key (if your server has APP_KEY)">
+<input type="file" id="f" accept="image/*">
+<textarea id="sms" rows="3" placeholder="Paste bank SMS (optional - only a hint; confirm in your bank app)"></textarea>
+<select id="lang"><option value="en">English</option><option value="hi">हिंदी</option><option value="kn">ಕನ್ನಡ</option></select>
+<button id="go">Check payment</button>
+<div id="v"><div id="m"></div><small id="r"></small></div>
+<img id="h" alt="">
+<script>
+const tts={en:"en-IN",hi:"hi-IN",kn:"kn-IN"};
+try{document.getElementById("k").value=localStorage.getItem("pk")||""}catch(e){}
+document.getElementById("go").onclick=async()=>{
+  const file=document.getElementById("f").files[0]; if(!file){alert("Choose a screenshot");return}
+  const fd=new FormData(); fd.append("image",file);
+  fd.append("pasted_sms",document.getElementById("sms").value);
+  const lang=document.getElementById("lang").value; fd.append("lang",lang);
+  const key=document.getElementById("k").value;
+  try{localStorage.setItem("pk",key)}catch(e){}
+  const r=await fetch("/verify",{method:"POST",body:fd,headers:{"X-App-Key":key}});
+  if(!r.ok){alert(r.status==401?"Wrong app key":"Server error "+r.status);return}
+  const res=await r.json();
+  const v=document.getElementById("v"); v.style.display="block"; v.className=res.verdict;
+  document.getElementById("m").textContent=res.message;
+  document.getElementById("r").textContent=res.reason;
+  document.getElementById("h").src="data:image/png;base64,"+res.heatmap_png_base64;
+  const u=new SpeechSynthesisUtterance(res.message); u.lang=tts[lang]; speechSynthesis.speak(u);
+};
+</script></body></html>

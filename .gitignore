@@ -1,0 +1,12 @@
+# NEVER commit private data or secrets
+data/raw/
+data/img/
+data/aiforge/
+data/*.json
+.venv/
+__pycache__/
+*.db
+demo/
+out/
+.env
+.env*
